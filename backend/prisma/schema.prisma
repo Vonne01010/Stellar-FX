@@ -1,0 +1,127 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// A BPO client company using the platform
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  createdAt   DateTime @default(now())
+
+  employees   Employee[]
+  payrollRuns PayrollRun[]
+}
+
+// A Filipino staff member being paid
+model Employee {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  fullName      String
+  email         String   @unique
+  stellarWallet String   // public key (G...) where PHP-equivalent payout lands
+  role          Role     @default(EMPLOYEE)
+  createdAt     DateTime @default(now())
+
+  payrollItems  PayrollItem[]
+
+  @@index([companyId]) // speeds up "list employees for this company" queries
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+// One payroll batch/cycle initiated by a company (e.g. "July 2026 Payroll")
+model PayrollRun {
+  id          String        @id @default(cuid())
+  companyId   String
+  company     Company       @relation(fields: [companyId], references: [id])
+  status      RunStatus     @default(PENDING)
+  totalUsdc   BigInt        // stored in smallest unit — define precision explicitly in code (e.g. 1 USDC = 10_000_000, matching Stellar's 7 decimal places)
+  createdAt   DateTime      @default(now())
+  completedAt DateTime?
+
+  items       PayrollItem[]
+
+  @@index([companyId]) // speeds up "list payroll runs for this company"
+  @@index([status])    // speeds up dashboard filters like "show all PENDING runs"
+}
+
+enum RunStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// One employee's line item within a payroll run
+model PayrollItem {
+  id           String       @id @default(cuid())
+  payrollRunId String
+  payrollRun   PayrollRun   @relation(fields: [payrollRunId], references: [id])
+  employeeId   String
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  amountUsdc   BigInt       // amount owed in USDC (smallest unit)
+  amountPhp    BigInt?      // amount actually disbursed in PHP (smallest unit), filled after conversion
+  status       ItemStatus   @default(PENDING)
+
+  transaction  Transaction?
+  statusHistory StatusHistory[]
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([payrollRunId, employeeId]) // prevents the same employee being double-added to one run (e.g. from a retried request)
+  @@index([employeeId])                // speeds up per-employee payroll history queries
+  @@index([status])                    // speeds up "find all FAILED items" for retry logic
+}
+
+enum ItemStatus {
+  PENDING      // created, not yet sent to anchor
+  CONVERTING   // sent to SEP-24 anchor, awaiting conversion
+  DISBURSING   // anchor completed, on-chain payout in progress
+  DISBURSED    // confirmed paid to employee wallet
+  FAILED       // failed at any stage
+}
+
+// Append-only audit trail: every status transition a PayrollItem goes through.
+// Never update or delete rows here — only insert. This is what lets you answer
+// "when did this item become CONVERTING?" after the fact, instead of only
+// knowing its current status.
+model StatusHistory {
+  id            String      @id @default(cuid())
+  payrollItemId String
+  payrollItem   PayrollItem @relation(fields: [payrollItemId], references: [id])
+
+  fromStatus    ItemStatus?  // null if this is the very first status set
+  toStatus      ItemStatus
+  note          String?      // optional context, e.g. an anchor error message
+  createdAt     DateTime     @default(now())
+
+  @@index([payrollItemId]) // speeds up "get full history for this item"
+}
+
+// Tracks the anchor transaction + on-chain reference for one payroll item
+model Transaction {
+  id              String      @id @default(cuid())
+  payrollItemId   String      @unique
+  payrollItem     PayrollItem @relation(fields: [payrollItemId], references: [id])
+
+  anchorTxId      String?     // SEP-24 transaction id from the anchor
+  anchorStatus    String?     // raw status string from anchor (e.g. "pending_anchor")
+  stellarTxHash   String?     // on-chain transaction hash once disbursed
+  errorMessage    String?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([anchorTxId])    // speeds up webhook lookups: "find the row matching this incoming anchor tx id"
+  @@index([stellarTxHash]) // speeds up reconciliation against Horizon/RPC by tx hash
+}
