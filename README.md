@@ -1,14 +1,14 @@
-# StellaQR
-StellaQR is a Stellar-powered payment system that lets bazaar vendors accept multiple payment methods through a single QR code, automatically consolidating digital payments into one USDC balance for easier reconciliation.
+# Stellar FX
+Stellar FX is a Stellar-powered cross-border payroll system that lets BPO companies pay offshore Filipino staff by receiving USD-denominated funds from clients and automatically converting and disbursing them as PHP directly into staff wallets.
 
 ## Problem
-Bazaar and tabletop vendors often accept payments through different methods such as GCash, Maya, and cash to accommodate customers. While this provides convenience for buyers, it creates challenges for vendors who must manually reconcile transactions from multiple platforms at the end of the day. Tracking payments across different apps and cash records is time-consuming, increases the risk of errors, and makes it difficult to maintain accurate financial records, especially for small businesses with limited resources.
+BPO companies frequently serve offshore clients who pay for services in USD, while their Filipino staff need to be paid in PHP. This currency mismatch forces companies to rely on traditional banking rails and FX providers to convert funds before payroll can be disbursed. These processes are often slow, involve multiple intermediaries, carry high conversion fees, and lack transparency for both the company and its employees. For BPOs managing payroll for many staff members each cycle, this adds significant operational overhead, delays, and cost.
 
 ## How It Works
 [description]
 
 ## How It Uses Stellar
-[description]
+The client pays in USDC on the Stellar network. Using a SEP-24 anchor, the USDC is automatically converted into PHP and the resulting funds are disbursed directly to staff wallets, enabling a fast, low-cost, end-to-end USDC → PHP payment flow without relying on traditional cross-border banking rails.
 
 ## Track
 [description]
