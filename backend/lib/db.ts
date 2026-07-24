@@ -7,9 +7,15 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const adapter = new PrismaNeon({
-    connectionString: process.env.DATABASE_URL,
-  });
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    // Fail loudly here rather than getting a confusing low-level
+    // connection error later inside some random route handler.
+    throw new Error("DATABASE_URL is not set. Check your .env file.");
+  }
+
+  const adapter = new PrismaNeon({ connectionString });
   return new PrismaClient({ adapter });
 }
 
