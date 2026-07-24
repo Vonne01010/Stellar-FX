@@ -1,0 +1,99 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// A BPO client company using the platform
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  employees Employee[]
+  payrollRuns PayrollRun[]
+}
+
+// A Filipino staff member being paid
+model Employee {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  fullName      String
+  email         String   @unique
+  stellarWallet String   // public key (G...) where PHP-equivalent payout lands
+  role          Role     @default(EMPLOYEE)
+  createdAt     DateTime @default(now())
+
+  payrollItems  PayrollItem[]
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+// One payroll batch/cycle initiated by a company (e.g. "July 2026 Payroll")
+model PayrollRun {
+  id          String        @id @default(cuid())
+  companyId   String
+  company     Company       @relation(fields: [companyId], references: [id])
+  status      RunStatus     @default(PENDING)
+  totalUsdc   BigInt        // stored in smallest unit (e.g. 1 USDC = 10_000_000 stroops equiv, define precision explicitly)
+  createdAt   DateTime      @default(now())
+  completedAt DateTime?
+
+  items       PayrollItem[]
+}
+
+enum RunStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// One employee's line item within a payroll run
+model PayrollItem {
+  id           String       @id @default(cuid())
+  payrollRunId String
+  payrollRun   PayrollRun   @relation(fields: [payrollRunId], references: [id])
+  employeeId   String
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  amountUsdc   BigInt       // amount owed in USDC (smallest unit)
+  amountPhp    BigInt?      // amount actually disbursed in PHP (smallest unit), filled after conversion
+  status       ItemStatus   @default(PENDING)
+
+  transaction  Transaction?
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+enum ItemStatus {
+  PENDING      // created, not yet sent to anchor
+  CONVERTING   // sent to SEP-24 anchor, awaiting conversion
+  DISBURSING   // anchor completed, on-chain payout in progress
+  DISBURSED    // confirmed paid to employee wallet
+  FAILED       // failed at any stage
+}
+
+// Tracks the anchor transaction + on-chain reference for one payroll item
+model Transaction {
+  id              String    @id @default(cuid())
+  payrollItemId   String    @unique
+  payrollItem     PayrollItem @relation(fields: [payrollItemId], references: [id])
+
+  anchorTxId      String?   // SEP-24 transaction id from the anchor
+  anchorStatus    String?   // raw status string from anchor (e.g. "pending_anchor")
+  stellarTxHash   String?   // on-chain transaction hash once disbursed
+  errorMessage    String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
