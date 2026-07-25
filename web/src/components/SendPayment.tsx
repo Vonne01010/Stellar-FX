@@ -77,9 +77,7 @@ export default function SendPayment({
   };
 
   return (
-    <div className="mt-6 rounded border border-gray-200 bg-white p-6">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">Send Payment</h2>
-
+    <div className="mt-6 rounded bg-white p-0">
       <div className="space-y-4">
         <div>
           <label className="mb-1 block text-sm text-gray-600">Asset</label>

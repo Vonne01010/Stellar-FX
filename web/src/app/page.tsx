@@ -19,9 +19,9 @@ export default function Home() {
       <div className="mx-auto flex h-[668px] max-h-[calc(100vh-1rem)] w-[340px] max-w-[calc(100vw-1rem)] flex-col gap-4 rounded-[36px] border border-violet-200/70 bg-white/90 p-2 shadow-[0_16px_50px_rgba(109,40,217,0.12)] backdrop-blur-xl sm:w-[360px] sm:max-w-[calc(100vw-2rem)]">
         <div className="mx-auto mb-1 h-1.5 w-20 rounded-full bg-violet-200/80" />
         <section className="flex flex-1 flex-col overflow-hidden rounded-[24px] border border-violet-100 bg-[#fcfbff]">
-          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-violet-100 p-5">
-            <div>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-700">
+          <div className="flex shrink-0 items-start justify-between gap-2 border-b border-violet-100 p-4">
+            <div className="min-w-0">
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-700">
                 StellarX Console
               </p>
             </div>
