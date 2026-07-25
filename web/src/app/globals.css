@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --void: #0a0817;
+  --void-raised: #15122a;
+  --void-raised-2: #1c1836;
+  --line: rgba(255, 255, 255, 0.1);
+
+  --star: #edebfa;
+  --star-soft: #a69fc7;
+
+  --violet: #8b5cf6;
+  --violet-soft: #241d47;
+  --violet-glow: rgba(139, 92, 246, 0.35);
+
+  --magenta: #e879f9;
+  --magenta-soft: #35204a;
+
+  --teal: #2dd4bf;
+  --teal-soft: #113330;
+
+  --amber: #fbbf24;
+  --amber-soft: #3a2e0e;
+
+  --rose: #fb7185;
+  --rose-soft: #3a1520;
+
+  --font-display: var(--font-space-grotesk);
+  --font-body: var(--font-inter);
+  --font-mono: var(--font-ibm-plex-mono);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-void: var(--void);
+  --color-void-raised: var(--void-raised);
+  --color-void-raised-2: var(--void-raised-2);
+  --color-line: var(--line);
+  --color-star: var(--star);
+  --color-star-soft: var(--star-soft);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-magenta: var(--magenta);
+  --color-magenta-soft: var(--magenta-soft);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--void);
+  color: var(--star);
+  font-family: var(--font-body);
+  position: relative;
+}
+
+/* subtle starfield — three sizes of dots, low opacity, fixed so it doesn't scroll */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgba(237,235,250,0.5) 50%, transparent 100%),
+    radial-gradient(1px 1px at 70% 15%, rgba(237,235,250,0.35) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 80%, rgba(237,235,250,0.4) 50%, transparent 100%),
+    radial-gradient(1px 1px at 85% 60%, rgba(237,235,250,0.3) 50%, transparent 100%),
+    radial-gradient(1px 1px at 55% 45%, rgba(237,235,250,0.25) 50%, transparent 100%);
+  background-repeat: repeat;
+  background-size: 600px 600px;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+::selection {
+  background: var(--violet-glow);
+  color: var(--star);
 }
