@@ -30,7 +30,7 @@ export default function ConnectWallet({
         </button>
         <button
           onClick={disconnect}
-          className="text-sm text-red-500 hover:underline"
+          className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-600 transition hover:border-rose-300 hover:bg-rose-100"
         >
           Disconnect
         </button>
