@@ -1,4 +1,4 @@
-import { StellarTomlResolver } from "@stellar/stellar-sdk";
+import { StellarToml } from "@stellar/stellar-sdk";
 
 /**
  * The fields we actually care about from an anchor's stellar.toml.
@@ -31,7 +31,7 @@ export async function fetchAnchorInfo(domain: string): Promise<AnchorInfo> {
     // https://{domain}/.well-known/stellar.toml and parses it into a
     // plain object for us — it also enforces the file isn't absurdly
     // large, which raw fetch + a naive parser wouldn't protect against.
-    toml = await StellarTomlResolver.resolve(domain);
+    toml = await StellarToml.Resolver.resolve(domain);
   } catch (err) {
     throw new AnchorTomlError(
       `Could not fetch stellar.toml from "${domain}": ${
