@@ -8,8 +8,8 @@
  * anything else on top of it.
  */
 import "dotenv/config";
-import { fetchAnchorInfo } from "../src/lib/stellar/anchor-toml.ts";
-import { authenticateWithAnchor } from "../src/lib/stellar/sep10-auth.ts";
+import { fetchAnchorInfo } from "../src/lib/stellar/anchor-toml";
+import { authenticateWithAnchor } from "../src/lib/stellar/sep10-auth";
 
 async function main() {
   const domain = process.env.ANCHOR_HOME_DOMAIN?.replace(/^https?:\/\//, "");
