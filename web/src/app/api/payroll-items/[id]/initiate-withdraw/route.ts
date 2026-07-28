@@ -81,7 +81,7 @@ export async function POST(
       transferServerSep24: anchorInfo.transferServerSep24,
       jwt,
       assetCode,
-      account: item.employee.stellarWallet,
+      account: platformPublicKey,
       amount: humanAmount,
     });
 

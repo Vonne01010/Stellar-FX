@@ -31,21 +31,21 @@ export async function startInteractiveWithdraw(
 
   const url = `${transferServerSep24}/transactions/withdraw/interactive`;
 
-  const body = new URLSearchParams({
+  const requestBody: Record<string, string> = {
     asset_code: assetCode,
     account,
-  });
+  };
   if (amount) {
-    body.set("amount", amount);
+    requestBody.amount = amount;
   }
 
   const res = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${jwt}`,
-      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Type": "application/json",
     },
-    body: body.toString(),
+    body: JSON.stringify(requestBody),
   });
 
   if (!res.ok) {
