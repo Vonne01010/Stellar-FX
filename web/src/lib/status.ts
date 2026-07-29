@@ -11,7 +11,10 @@ export type ItemStatus =
 
 // SEP-24 anchor statuses per the spec: incomplete, pending_anchor,
 // pending_stellar, pending_external, completed, error, etc.
-export function mapAnchorStatusToItemStatus(anchorStatus: string): ItemStatus {
+export function mapAnchorStatusToItemStatus(
+  anchorStatus: string,
+  currentStatus?: ItemStatus
+): ItemStatus {
   switch (anchorStatus) {
     case "incomplete":
       return "PENDING";
@@ -19,6 +22,8 @@ export function mapAnchorStatusToItemStatus(anchorStatus: string): ItemStatus {
     case "pending_stellar":
     case "pending_external":
     case "pending_user_transfer_start":
+    case "pending_customer_info_update": // anchor needs more KYC/payout details
+    case "pending_transaction_info_update":
       return "CONVERTING";
     case "completed":
       // Anchor finished converting; on-chain disbursement to employee
@@ -26,9 +31,14 @@ export function mapAnchorStatusToItemStatus(anchorStatus: string): ItemStatus {
       return "DISBURSING";
     case "error":
     case "expired":
+    case "no_market":
+    case "too_small":
+    case "too_large":
       return "FAILED";
     default:
-      // Unknown anchor status — don't silently assume success.
-      return "PENDING";
+      // Unknown anchor status — DON'T silently reset progress. If we
+      // already know this item is past PENDING, stay there rather than
+      // regressing it backward on an unrecognized status string.
+      return currentStatus ?? "PENDING";
   }
 }
