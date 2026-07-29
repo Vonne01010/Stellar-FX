@@ -6,6 +6,10 @@ import {
   startInteractiveWithdraw,
   Sep24WithdrawError,
 } from "@/lib/stellar/sep24-withdraw";
+import {
+  findConfirmedPayment,
+  OnChainConfirmationError,
+} from "@/lib/stellar/onchain-confirmation";
 
 // POST /api/payroll-items/:id/initiate-withdraw
 // Kicks off the SEP-24 withdraw flow for one employee's payroll line item.
@@ -61,6 +65,46 @@ export async function POST(
       );
     }
 
+    // 2.5. Confirm the contract actually disbursed the USDC to the
+    // platform's wallet before we start converting money that isn't
+    // there yet. This is what gates Milestone 3 on Milestone 4 —
+    // without it, we'd fire a withdraw request the moment a payroll
+    // run is created, regardless of whether Member 1's contract has
+    // actually moved funds on-chain.
+    //
+    // DEV-ONLY BYPASS: set SKIP_ONCHAIN_CONFIRMATION_CHECK=true in .env
+    // to skip this check during local testing, before Member 1's
+    // contract is wired up to actually send real testnet payments.
+    // NEVER set this in a deployed/demo environment — it would let
+    // withdrawals fire without any real funds having arrived.
+    const skipCheck = process.env.SKIP_ONCHAIN_CONFIRMATION_CHECK === "true";
+
+    const humanAmount = (Number(item.amountUsdc) / 10_000_000).toFixed(7);
+
+    if (!skipCheck) {
+      const usdcReceived = await findConfirmedPayment(
+        platformPublicKey,
+        assetCode,
+        humanAmount,
+        item.createdAt
+      );
+
+      if (!usdcReceived) {
+        return NextResponse.json(
+          {
+            error:
+              "USDC disbursement from the contract has not been confirmed on-chain yet — try again shortly",
+            confirmed: false,
+          },
+          { status: 409 }
+        );
+      }
+    } else {
+      console.warn(
+        `[DEV BYPASS] Skipping on-chain USDC confirmation check for payroll item ${item.id} — SKIP_ONCHAIN_CONFIRMATION_CHECK is enabled`
+      );
+    }
+
     const anchorInfo = await fetchAnchorInfo(anchorDomain);
 
     // 3. SEP-10 authenticate
@@ -75,8 +119,6 @@ export async function POST(
     // interactive form typically wants a human-readable decimal string,
     // so we convert here rather than pushing that logic into the SEP-24
     // helper (which shouldn't need to know our internal unit convention).
-    const humanAmount = (Number(item.amountUsdc) / 10_000_000).toString();
-
     const withdrawResult = await startInteractiveWithdraw({
       transferServerSep24: anchorInfo.transferServerSep24,
       jwt,
@@ -126,7 +168,8 @@ export async function POST(
     if (
       error instanceof AnchorTomlError ||
       error instanceof Sep10AuthError ||
-      error instanceof Sep24WithdrawError
+      error instanceof Sep24WithdrawError ||
+      error instanceof OnChainConfirmationError
     ) {
       return NextResponse.json({ error: error.message }, { status: 502 });
     }
