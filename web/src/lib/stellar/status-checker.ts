@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { fetchAnchorInfo } from "@/lib/stellar/anchor-toml";
 import { authenticateWithAnchor } from "@/lib/stellar/sep10-auth";
 import { getSep24TransactionStatus } from "@/lib/stellar/sep24-withdraw";
-import { mapAnchorStatusToItemStatus } from "@/lib/status";
+import { mapAnchorStatusToItemStatus, ItemStatus } from "@/lib/status";
 
 export interface StatusCheckResult {
   itemId: string;
@@ -61,7 +61,10 @@ export async function checkAndUpdatePayrollItemStatus(
   );
 
   const rawAnchorStatus = String(anchorTx.status ?? "");
-  const newItemStatus = mapAnchorStatusToItemStatus(rawAnchorStatus);
+  const newItemStatus = mapAnchorStatusToItemStatus(
+    rawAnchorStatus,
+    item.status as ItemStatus
+  );
 
   if (newItemStatus === item.status) {
     return {
