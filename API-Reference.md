@@ -142,6 +142,20 @@ or, if nothing's found yet:
 
 ---
 
+### `POST /api/payroll-items/:id/retry`
+Resets a `FAILED` item back to `PENDING` so `initiate-withdraw` can be called on it again (e.g. after a transient anchor error or a resolved KYC/info issue).
+
+**Preconditions:** item must be in `FAILED` status (returns `409` otherwise).
+
+**Response `200`:**
+```json
+{ "message": "Item reset to PENDING — call initiate-withdraw again to retry" }
+```
+
+**Note:** this does not resume the old anchor transaction — a fresh `initiate-withdraw` call starts an entirely new one. The old transaction id remains visible in `StatusHistory` for audit purposes.
+
+---
+
 ## Status Values Reference
 
 **`PayrollItem.status`** (`ItemStatus` enum):
